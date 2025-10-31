@@ -22,7 +22,7 @@ export const DocsPage: React.FC = () => {
           🤖 Martingale Trading Bot
         </h1>
         <p style={{ fontSize: '20px', color: '#999', margin: 0 }}>
-          An automated grid trading bot for Based.One exchange using martingale strategy with intelligent position management and automatic take-profit execution.
+          An automated grid trading bot for Based using martingale strategy with intelligent position management and automatic take-profit execution.
         </p>
       </div>
 

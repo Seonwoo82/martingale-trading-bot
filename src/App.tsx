@@ -1,5 +1,6 @@
 // src/App.tsx
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import {
   BasedMiniAppProvider,
   useMiniApp,
@@ -8,7 +9,7 @@ import './App.css';
 import { TradingConfigForm } from './components/TradingConfigForm';
 import { TradingDashboard } from './components/TradingDashboard';
 import { ControlPanel } from './components/ControlPanel';
-// Logger removed for production
+import { DocsPage } from './components/DocsPage';
 import { TradingConfig } from './types';
 import { tradingOrchestrator } from './services/TradingOrchestrator';
 
@@ -21,15 +22,12 @@ function TradingBot() {
     connected = miniApp.connected;
     connecting = miniApp.connecting;
   } catch (error) {
-    // Silently ignore SDK errors
-    console.log('MiniApp SDK not available, using standalone mode');
+    // Silently handle MiniApp errors
   }
+
   const [config, setConfig] = useState<TradingConfig | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [state, setState] = useState(tradingOrchestrator.getState());
-
-
-  // Connection status logging removed for production
 
   // Update state periodically
   useEffect(() => {
@@ -43,11 +41,10 @@ function TradingBot() {
   const handleConfigSubmit = async (newConfig: TradingConfig) => {
     setConfig(newConfig);
     try {
-
       await tradingOrchestrator.start(newConfig);
       setIsRunning(true);
-
     } catch (error) {
+      console.error('Failed to start trading:', error);
       alert('Failed to start trading: ' + error);
     }
   };
@@ -57,6 +54,7 @@ function TradingBot() {
       await tradingOrchestrator.stop();
       setIsRunning(false);
     } catch (error) {
+      console.error('Failed to stop trading:', error);
     }
   };
 
@@ -69,22 +67,32 @@ function TradingBot() {
       await tradingOrchestrator.start(config);
       setIsRunning(true);
     } catch (error) {
+      console.error('Failed to start trading:', error);
       alert('Failed to start trading: ' + error);
     }
   };
 
   if (!connected) {
     return (
-      <div style={{ padding: '20px', textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
+      <div style={{ 
+        padding: '20px', 
+        textAlign: 'center', 
+        maxWidth: '600px', 
+        margin: '0 auto',
+        background: '#0d0d0d',
+        minHeight: '100vh',
+        color: '#fff'
+      }}>
         <h2>🤖 Martingale Trading Bot</h2>
         <p>Status: {connecting ? 'Connecting...' : 'Ready'}</p>
-
-        <div style={{
-          marginTop: '30px',
-          padding: '20px',
-          background: '#f0f9ff',
+        
+        <div style={{ 
+          marginTop: '30px', 
+          padding: '20px', 
+          background: '#f0f9ff', 
           borderRadius: '8px',
-          textAlign: 'left'
+          textAlign: 'left',
+          color: '#000'
         }}>
           <h3 style={{ marginTop: 0 }}>📋 Setup Instructions</h3>
           <ol style={{ paddingLeft: '20px' }}>
@@ -96,30 +104,48 @@ function TradingBot() {
           </ol>
         </div>
 
-        <div style={{
-          marginTop: '20px',
-          padding: '15px',
-          background: '#fff3cd',
+        <div style={{ 
+          marginTop: '20px', 
+          padding: '15px', 
+          background: '#fff3cd', 
           borderRadius: '8px',
-          fontSize: '14px'
+          fontSize: '14px',
+          color: '#856404'
         }}>
           ⚠️ This app must be opened through Based.One testnet to function properly
+        </div>
+
+        <div style={{ marginTop: '20px' }}>
+          <a 
+            href="/docs" 
+            style={{ 
+              display: 'inline-block',
+              padding: '12px 24px',
+              background: '#3b82f6',
+              color: 'white',
+              textDecoration: 'none',
+              borderRadius: '8px',
+              fontWeight: 'bold'
+            }}
+          >
+            📖 View Documentation
+          </a>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{
-      padding: '20px',
-      maxWidth: '1200px',
+    <div style={{ 
+      padding: '20px', 
+      maxWidth: '1200px', 
       margin: '0 auto',
       background: '#0d0d0d',
       minHeight: '100vh',
       color: '#fff'
     }}>
-      <h1 style={{
-        color: '#fff',
+      <h1 style={{ 
+        color: '#fff', 
         fontSize: '32px',
         marginBottom: '10px',
         fontWeight: 'bold'
@@ -207,99 +233,106 @@ class ErrorBoundary extends React.Component<
   }
 
   static getDerivedStateFromError() {
-    // Don't show error UI, just log it
-    return { hasError: false };
+    return { hasError: true };
   }
 
-  componentDidCatch(error: Error, errorInfo: any) {
-    // Ignore permission errors and object errors from Based App SDK
-    const errorMessage = error?.message?.toString() || '';
-    const errorString = error?.toString() || '';
-
-    if (errorMessage.includes('PERMISSION_DENIED') ||
-      errorString.includes('PERMISSION_DENIED') ||
-      errorMessage.includes('[object Object]') ||
-      errorString.includes('[object Object]')) {
-      // Silently ignore these errors
+  componentDidCatch(error: Error) {
+    // Ignore permission errors from Based App SDK
+    if (error.message?.includes('PERMISSION_DENIED')) {
+      console.log('Ignoring permission error - using mock mode');
       this.setState({ hasError: false });
       return;
     }
-
-    // Log other errors but don't show error UI
-    console.log('Error caught by boundary (suppressed):', error);
-    this.setState({ hasError: false });
+    console.error('Error caught by boundary:', error);
   }
 
   render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: '20px', textAlign: 'center', color: '#fff', background: '#0d0d0d', minHeight: '100vh' }}>
+          <h2>Something went wrong</h2>
+          <button onClick={() => window.location.reload()}>Reload</button>
+        </div>
+      );
+    }
+
     return this.props.children;
   }
 }
 
-function App() {
-  const [hasProvider, setHasProvider] = useState(true);
+function AppContent() {
+  const location = useLocation();
+  
+  // If we're on the docs page, don't use BasedMiniAppProvider
+  if (location.pathname === '/docs') {
+    return <DocsPage />;
+  }
 
+  return (
+    <BasedMiniAppProvider config={{
+      appId: 'martingale01',
+      name: 'Martingale Trading Bot',
+      url: 'http://localhost:3000',
+      autoConnect: false
+    }}>
+      <div className="App">
+        <TradingBot />
+      </div>
+    </BasedMiniAppProvider>
+  );
+}
+
+function App() {
   // Suppress permission errors globally
   useEffect(() => {
     // Suppress console errors
     const originalError = console.error;
     console.error = (...args: any[]) => {
-      const message = args[0]?.toString() || '';
-      if (message.includes('PERMISSION_DENIED') || message.includes('[object Object]')) {
+      if (args[0]?.toString().includes('PERMISSION_DENIED')) {
+        // Silently ignore permission errors
         return;
       }
       originalError.apply(console, args);
     };
 
-    // Suppress window errors - most aggressive approach
+    // Suppress window errors
     const errorHandler = (event: ErrorEvent) => {
-      event.stopImmediatePropagation();
-      event.preventDefault();
+      if (event.message?.includes('PERMISSION_DENIED')) {
+        event.preventDefault();
+        return true;
+      }
       return false;
     };
 
-    window.addEventListener('error', errorHandler, true);
+    window.addEventListener('error', errorHandler);
 
     // Suppress unhandled promise rejections
     const rejectionHandler = (event: PromiseRejectionEvent) => {
-      event.stopImmediatePropagation();
-      event.preventDefault();
+      if (event.reason?.message?.includes('PERMISSION_DENIED')) {
+        event.preventDefault();
+        return;
+      }
     };
 
-    window.addEventListener('unhandledrejection', rejectionHandler, true);
+    window.addEventListener('unhandledrejection', rejectionHandler);
 
     return () => {
       console.error = originalError;
-      window.removeEventListener('error', errorHandler, true);
-      window.removeEventListener('unhandledrejection', rejectionHandler, true);
+      window.removeEventListener('error', errorHandler);
+      window.removeEventListener('unhandledrejection', rejectionHandler);
     };
   }, []);
 
-  // Try to render with provider, fallback to standalone
-  try {
-    return (
-      <ErrorBoundary>
-        <BasedMiniAppProvider config={{
-          appId: 'martingale01',
-          name: 'Martingale Trading Bot',
-          url: 'http://localhost:3000',
-          autoConnect: false
-        }}>
-          <div className="App">
-            <TradingBot />
-          </div>
-        </BasedMiniAppProvider>
-      </ErrorBoundary>
-    );
-  } catch (error) {
-    // If provider fails, render without it
-    return (
-      <ErrorBoundary>
-        <div className="App">
-          <TradingBot />
-        </div>
-      </ErrorBoundary>
-    );
-  }
+  return (
+    <ErrorBoundary>
+      <Router>
+        <Routes>
+          <Route path="/docs" element={<DocsPage />} />
+          <Route path="/*" element={<AppContent />} />
+        </Routes>
+      </Router>
+    </ErrorBoundary>
+  );
 }
 
 export default App;

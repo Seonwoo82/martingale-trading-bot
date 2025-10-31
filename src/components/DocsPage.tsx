@@ -40,20 +40,6 @@ export const DocsPage: React.FC = () => {
         </ul>
       </section>
 
-      {/* Getting Started */}
-      <section style={{ marginBottom: '40px' }}>
-        <h2 style={{ fontSize: '32px', color: '#22c55e', marginBottom: '20px' }}>🚀 Getting Started</h2>
-        
-        <h3 style={{ fontSize: '24px', color: '#fff', marginBottom: '15px' }}>Running on Based.One</h3>
-        <ol style={{ fontSize: '16px', lineHeight: '1.8', color: '#ccc' }}>
-          <li>Visit <a href="https://testnet.based.one" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6' }}>https://testnet.based.one</a></li>
-          <li>Click the bug icon in the lower right corner</li>
-          <li>Enter App ID: <code style={{ background: '#333', padding: '2px 6px', borderRadius: '3px' }}>martingale01</code></li>
-          <li>Enter URL: <code style={{ background: '#333', padding: '2px 6px', borderRadius: '3px' }}>http://localhost:3000</code></li>
-          <li>Click "Load app"</li>
-        </ol>
-      </section>
-
       {/* How to Use */}
       <section style={{ marginBottom: '40px' }}>
         <h2 style={{ fontSize: '32px', color: '#f59e0b', marginBottom: '20px' }}>📖 How to Use</h2>
